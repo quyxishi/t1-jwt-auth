@@ -1,0 +1,29 @@
+#file: noinspection SpringBootApplicationYaml
+
+spring:
+  application:
+    name: jwt-auth
+  config:
+    import: optional:file:.env[.properties]
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASS}
+  datasource:
+    url: jdbc:${DB_URI}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  servlet:
+    context-path: /api/v1
+
+jwt:
+  expiry: 300
+  refresh-expiry: 604800
+  private-key-res: classpath:keys/ecdsa-p521-private.pem
+  public-key-res: classpath:keys/ecdsa-p521-public.pem
