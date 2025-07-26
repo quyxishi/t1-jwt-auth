@@ -12,7 +12,6 @@ import com.raii.jwtauth.security.RefreshService;
 import com.raii.jwtauth.service.UserService;
 import com.raii.jwtauth.service.exceptions.UserAlreadyExistsWithFieldException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {

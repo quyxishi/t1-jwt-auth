@@ -1,10 +1,14 @@
 package com.raii.jwtauth.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raii.jwtauth.JwtAuthException;
 import com.raii.jwtauth.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -16,8 +20,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import java.security.Security;
 
@@ -26,6 +32,8 @@ import java.security.Security;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final FilterChainExceptionHandler filterChainExceptionHandler;
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserService userService;
 
@@ -40,6 +48,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .anonymous(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -47,9 +56,27 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(filterChainExceptionHandler, LogoutFilter.class)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                );
 
         return http.build();
+    }
+
+    private AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, authException) -> {
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            final var errorResponse = JwtAuthException.ACCESS_DENIED
+                    .issueResponseEntity()
+                    .getBody();
+
+            final var mapper = new ObjectMapper();
+            response.getWriter().write(mapper.writeValueAsString(errorResponse));
+        };
     }
 
     @Bean
