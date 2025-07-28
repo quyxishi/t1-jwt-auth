@@ -32,7 +32,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(privateKey, Jwts.SIG.ES512);
+                .encryptWith(publicKey, Jwts.KEY.ECDH_ES_A256KW, Jwts.ENC.A256GCM);
     }
 
     public String issueAccessToken(UserDetails userDetails) {
@@ -51,9 +51,9 @@ public class JwtService {
 
     public Claims validateToken(String token) throws io.jsonwebtoken.JwtException, IllegalArgumentException {
         return Jwts.parser()
-                .verifyWith(publicKey)
+                .decryptWith(privateKey)
                 .build()
-                .parseSignedClaims(token)
+                .parseEncryptedClaims(token)
                 .getPayload();
     }
 }
