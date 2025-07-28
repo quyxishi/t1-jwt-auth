@@ -1,5 +1,5 @@
 # jwt-auth
-> T1-debut task w/ basic JWT (ES512) authorization
+> T1-debut task w/ basic JWE (ECDH-ES+A256KW + A256GCM) authorization
 
 ## Getting Started
 ```shell
